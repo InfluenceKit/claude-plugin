@@ -1,0 +1,24 @@
+{
+  "name": "influencekit",
+  "version": "1.0.0",
+  "owner": {
+    "name": "InfluenceKit",
+    "email": "support@influencekit.com"
+  },
+  "metadata": {
+    "description": "Connect Claude to your InfluenceKit account to manage campaigns, track performance, and troubleshoot deliverables.",
+    "homepage": "https://influencekit.com"
+  },
+  "plugins": [
+    {
+      "name": "influencekit",
+      "source": "./plugins/influencekit",
+      "description": "Connect Claude to your InfluenceKit account to manage campaigns, track performance, troubleshoot deliverables, and prepare reports.",
+      "author": {
+        "name": "InfluenceKit",
+        "email": "support@influencekit.com"
+      },
+      "keywords": ["influencer-marketing", "campaigns", "reporting", "mcp"]
+    }
+  ]
+}
