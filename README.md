@@ -10,9 +10,13 @@ server's own knowledge/craft resources).
 - [Claude Code](https://claude.ai/claude-code) v1.0.33+
 - An InfluenceKit account (brand/agency or creator). The MCP scopes itself to the
   logged-in user's account — most tools are gated by account type.
-- The InfluenceKit MCP connector configured: `https://api.influencekit.com/mcp`.
-  Setup help: https://help.influencekit.com/en/articles/14011645 (or ask Claude —
-  the **mcp-setup** routine triages connection problems).
+
+The plugin **bundles the InfluenceKit MCP connector** (`https://api.influencekit.com/mcp`),
+so on Claude Code and Claude Desktop installing it sets up the connection for you —
+there's no separate connector to add by hand. You approve a one-time OAuth prompt on
+first use and you're done. (ChatGPT and some other assistants add MCP connectors
+through their own UI instead — see https://help.influencekit.com/en/articles/14011645,
+or ask Claude: the **mcp-setup** routine triages connection problems.)
 
 ## Installation
 
@@ -27,6 +31,9 @@ server's own knowledge/craft resources).
 ```
 /plugin install influencekit
 ```
+
+**Step 3** — On first use, approve the OAuth prompt to connect your InfluenceKit
+account. The bundled connector means there's nothing else to configure.
 
 ## What you get
 

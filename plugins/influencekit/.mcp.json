@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "influencekit": {
+      "type": "http",
+      "url": "https://api.influencekit.com/mcp"
+    }
+  }
+}
