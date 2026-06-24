@@ -1,130 +1,137 @@
 # InfluenceKit Routines — MCP Gap Roadmap
 
-**Status:** documented, not built. This file describes what the InfluenceKit MCP
-would need in order to unlock the next waves of routines. None of these tools
-exist today; **do not reference them from any `SKILL.md`** — the v1 routines are
-grounded strictly in the 10 shipped tools (`list_tenants`, `get_tenant`,
-`list_campaigns`, `get_campaign`, `get_deliverable`, `get_report`,
-`check_connection`, `diagnose_deliverable`, `refresh_deliverable`,
-`clear_deliverable_error`).
+**Status:** revised against the **real** MCP (June 2026). The earlier draft of this
+file was written against a stale, 10-tool, admin-only picture of the MCP and
+listed report creation, discovery, and manual stats as "not built." They **are**
+built. This revision demotes what shipped and re-points the backlog at what is
+genuinely still open.
 
-The v1 routines ship against those 10. Everything below is the prioritized
-backlog: each MCP gap, the routines it unlocks, and the read-vs-write and
-auth-scope notes that gate it.
-
----
-
-## Why there's a gap at all
-
-Two properties of today's MCP shape the whole roadmap:
-
-1. **Read + ops only.** The toolset can read campaigns/deliverables/reports and
-   run a handful of repair ops (clear error, refresh). It cannot *create* —
-   no report creation, no media kits, no content. InfluenceKit's signature
-   surfaces (media kits, discovery, report building) are all write-side.
-2. **Admin-scoped / cross-tenant.** `list_tenants` searches across all accounts
-   and the MCP requires an admin account. That makes v1 an operator tool, not a
-   per-creator self-service one. Public self-service needs a tenant-scoped auth
-   mode (item 6).
+The routines in `plugins/influencekit/skills/` are grounded strictly in the **33
+shipped tools** registered in `app/mcp/influencekit_mcp_server.rb` (the `TOOLS`
+array). The tool-allowlist check (`scripts/check_tool_allowlist.rb`) enforces that
+no `SKILL.md` names a tool outside that set — this is the guard that the old
+`list_tenants` phantom slipped past. **Names that appear only here in the roadmap
+(future tools) must never be referenced from a `SKILL.md`.**
 
 ---
 
-## Priority backlog (highest leverage first)
+## What already shipped (demoted from the backlog)
 
-### 1. Report write-side — `create_report`, `add_deliverable_to_report`
+These were on the old roadmap as gaps. They exist today; the routines use them.
 
-- **Inputs:** `create_report(tenant_id, name, deliverable_ids[])`;
-  `add_deliverable_to_report(report_id, deliverable_id)`.
-- **Outputs:** the new/updated report with its deliverable set.
-- **Read vs write:** **write.** First true creation tools in the MCP.
-- **Auth scope:** tenant-scoped; writing a report into the wrong tenant is a data
-  leak. Gate hard.
-- **Routines unlocked:** `report-builder` (assemble a client report from a
-  campaign's winning deliverables) — the natural follow-on to `campaign-recap`
-  and `report-preflight`, which today can only read and QA reports a human built.
+| Capability | Real tool(s) | Notes |
+|---|---|---|
+| Create a report | `create_report` (event-backed), `create_builder_report` (filter-based) | `create_report` is **influencer-only** and returns `event_id` + `share_url` in one step. |
+| Add content to a report | `add_deliverable` | URLs (+ note) onto an event; partner-can-add covers cross-tenant. |
+| Manual / off-platform stats, label, type override | `update_deliverable` | Manual `reach`→`impressions_unique`, `impressions`; `title`; `provider` (e.g. `beehiiv`). This is the **newsletter** path today. |
+| Creator discovery | `influencer_discovery` | Brand-only; niche/platform/location/followers/engagement filters. |
+| AI brand visibility | `ai_search_status` / `ai_search_results` / `ai_search_queries` / `ai_search_run_check` | "AI Search" — LLM mention tracking, brand-only. |
+| List/search reports | `list_reports`, `query_report_data` | Any age, name search, pagination; composite read. |
+| Delete a report / event | `delete_report`, `delete_event` | Destructive; owner-scoped. |
+| Composite reads | `query_report_data`, `query_campaign_data` | Reports/campaigns + deliverables + metrics in one call. |
 
-### 2. Media kit read/write — `get_media_kit`, `update_media_kit`
-
-- **Inputs:** `get_media_kit(tenant_id)`; `update_media_kit(tenant_id, sections)`.
-- **Outputs:** the creator's media-kit content (audience stats, rates, past
-  partnerships, sample content).
-- **Read vs write:** read + write.
-- **Auth scope:** tenant-scoped; media kits are a creator's public-facing asset.
-- **Routines unlocked:** `media-kit-builder` — InfluenceKit's signature creator
-  feature, absent from the MCP entirely today.
-
-### 3. Discovery — `find_creators`, `search_creators`
-
-- **Inputs:** `search_creators(filters: { niche, platform, audience_size,
-  location, ... })`.
-- **Outputs:** ranked creator candidates with headline audience metrics.
-- **Read vs write:** read.
-- **Auth scope:** brand/agency-scoped; this is the brand pack's entry point.
-- **Routines unlocked:** `creator-discovery`, and feeds `brand-deal-fit-check`.
-
-### 4. Audience quality — `get_creator_audience`
-
-- **Inputs:** `get_creator_audience(creator_id)`.
-- **Outputs:** audience demographics, authenticity / fake-follower signals,
-  engagement-quality breakdown.
-- **Read vs write:** read.
-- **Auth scope:** brand/agency-scoped (with creator-consent considerations).
-- **Routines unlocked:** `audience-authenticity` — audience-quality vetting that
-  the current toolset can't touch.
-
-### 5. Rate / benchmark read
-
-- **Inputs:** a benchmark read keyed on platform + audience size + niche.
-- **Outputs:** typical rate ranges and performance benchmarks.
-- **Read vs write:** read.
-- **Auth scope:** could be platform-wide (aggregated) rather than tenant-scoped.
-- **Routines unlocked:** `rate-advisor` — pricing guidance for creators and
-  brands.
-
-### 6. Tenant-scoped auth mode
-
-- **What:** an auth mode that scopes the MCP to a single tenant instead of
-  admin/cross-tenant.
-- **Read vs write:** infrastructure, not a tool.
-- **Why it's on the list:** it's the **prerequisite** for any public, per-creator
-  self-service use of these routines. Until it lands, the audience stays
-  agency/operator. It gates the whole creator pack from going public.
+The `report-builder` and `creator-discovery` routines exist **because** these
+shipped — they were the headline "v2" items on the old roadmap.
 
 ---
 
-## v2 routines (NOT built — listed for coherence)
+## Genuinely open (elevate)
 
-Each maps to a backlog item above and should ship only after its dependency
-lands.
+Evidence for these is real agent-run usage (the Bethany / Kidding Around Media
+report-building transcripts), where the workaround is manual and visible.
 
-### Creator pack
+### 1. Report **date-sort** toggle
+- **Gap:** no way to flip a report's deliverable ordering (e.g. newest-first vs
+  campaign order) via the MCP. Agents can't honor "sort these by date."
+- **Shape:** a sort option on `create_report` / a report-update tool, or a
+  `sort:` field on the report's sections.
+- **Why now:** comes up every time a multi-deliverable report is assembled.
 
-- **media-kit-builder** — needs item 2 (`get_media_kit` / `update_media_kit`).
-- **rate-advisor** — needs item 5 (rate / benchmark read).
-- **brand-deal-fit-check** — needs items 3–4 (discovery + audience).
-- **disclosure-checker** — FTC `#ad` / disclosure compliance pass over a
-  campaign's deliverables. Partially doable on read tools today; full version
-  wants content-level access.
-- **report-builder** — needs item 1 (report write-side).
+### 2. **Group-by-tag / client-facing label per deliverable** (packages)
+- **Gap:** `update_deliverable` sets a per-card `title`, but there's no grouping —
+  no "Package A / Package B" sectioning or per-group subtotals in a report.
+- **Shape:** a deliverable `group`/`section` attribute + report grouping, or a
+  builder filter that emits grouped output.
+- **Why now:** agencies present deliverables in client-facing packages; today
+  that's faked with title prefixes.
 
-### Brand / agency pack
+### 3. **CSV export** from a shareable report
+- **Gap:** the share view is HTML only; no MCP tool returns a report's rows as CSV.
+- **Shape:** `export_report(report_id, format: "csv")` returning a download/URL.
+- **Why now:** clients ask for the raw numbers; agents currently can't hand them over.
 
-- **creator-discovery** — needs item 3 (discovery).
-- **audience-authenticity** — needs item 4 (`get_creator_audience`).
-- **campaign-brief** — generate a brief; needs campaign write-side.
-- **outreach** — creator outreach with a hard anti-spam gate; needs messaging
-  surface + the same "never auto-send" floor the v1 routines hold.
-- **roi-report** — needs item 1 (report write-side) plus rate/benchmark context.
+### 4. **Newsletter auto-pull**
+- **Gap:** newsletter reach/impressions are entered **manually** via
+  `update_deliverable`. There's no provider integration that pulls beehiiv /
+  Mailchimp / ConvertKit stats automatically.
+- **Shape:** newsletter-provider connectors feeding `Statistic`s like the social
+  platforms do, so `refresh_deliverable` works for newsletters too.
+- **Why now:** manual entry is the single biggest hand-edit in the report-builder
+  flow, and it's the one most prone to a fabricated number if an agent isn't
+  careful (the ethics floor leans on this staying explicit until it's automated).
+
+### 5. **Non-MCP plain-HTTP option** (API-key header)
+- **Gap:** the server is MCP-only (JSON-RPC over Streamable HTTP + OAuth). Runners
+  that aren't MCP clients (e.g. Hyperagent and other plain-HTTP agent platforms)
+  can't call it — "the server is up" but their runner isn't an MCP client.
+- **Shape:** a thin REST surface over the same tools, authenticated by an
+  `Authorization`/API-key header, scoped to one tenant.
+- **Why now:** it's the difference between "works in Claude" and "works in any
+  agent a customer already runs." Pairs with item 6.
+
+### 6. **Tenant-scoped public auth** (self-service)
+- **Gap:** today's auth resolves a tenant from a logged-in user (and super-admins
+  can cross tenants). There's no first-class, tenant-scoped credential a customer
+  can mint for *their own* account.
+- **Shape:** per-tenant API credentials / OAuth client scoped to one tenant, so
+  the routines can go public per-creator instead of operator-mediated.
+- **Why now:** prerequisite for shipping these routines as a self-service product
+  surface rather than an internal/agency tool. Gates items 3–5 going public.
 
 ---
 
-## Guardrails that carry forward to v2
+## Open architecture question (flag — do not decide here)
 
-The v1 ethics floor is not v1-specific — it scales with the write-side tools,
-where the stakes are higher:
+**Should the client routines live in this repo at all?**
 
-- A write-side `report-builder` must still **never auto-send**.
-- `outreach` must hold an explicit anti-spam gate — drafts for human review, not
-  auto-sends — exactly the posture the v1 routines take with reports.
-- Every audience/discovery number must trace to a tool call; no fabricated
-  authenticity scores or invented reach.
+There is real duplication risk. The MCP server already exposes server-side domain
+knowledge and craft guidance as **resources** (`app/prompts/brand_assistant/`:
+`skills/_data_model.txt`, `_campaign_lifecycle`, `_report_metrics`,
+`_industry_benchmarks`, `_report_sharing`, `_billing_usage`; `craft/`:
+`_metric_interpretation`, `_error_handling`, `_report_building`, `_campaign_setup`)
+and four server-side **prompts** (`campaign_report`, `diagnose_issues`,
+`account_health`, `discover_creators`).
+
+The routines here deliberately **reference** those rather than restate them — but
+the boundary is fuzzy and will drift. Options to weigh (not resolve in this PR):
+
+- **Keep here, reference-only.** Routines stay thin client-side orchestration;
+  domain truth stays server-side. Risk: two repos, manual sync, drift in tool
+  names/roles (exactly what this revision had to fix).
+- **Generate from the server.** Derive routines (or at least the tool/role/param
+  reference) from `influencekit_mcp_server.rb` + `app/prompts/brand_assistant/` so
+  the allowlist and role map can't go stale. Risk: build tooling, less hand-tuned
+  prose.
+- **Move server-side.** Express these as additional MCP prompts in the Rails app,
+  dropping the separate plugin. Risk: loses the Claude Code plugin/marketplace
+  distribution and the per-routine auto-load triggers.
+
+Decision owner: Bruno. This file just flags it so the next revision doesn't
+silently re-introduce the drift.
+
+---
+
+## Guardrails that carry forward
+
+The ethics floor is not v1-specific — it scales with the write-side tools, where
+the stakes are higher:
+
+- `report-builder` already **creates** reports — it must still **never auto-send
+  or auto-share**. Returning a `share_url` is not sending it.
+- Manual stats (`update_deliverable` reach/impressions) must come from the user or
+  source, entered verbatim — never estimated. Newsletter auto-pull (item 4) is
+  what finally removes the temptation.
+- Every discovery/AI-Search number must trace to a tool call; "provider
+  unavailable this run" is never the same as "brand not mentioned."
+- Any future `outreach`/messaging tool holds an explicit anti-spam gate — drafts
+  for human review, not auto-sends — the same posture the report routines take.

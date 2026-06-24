@@ -1,5 +1,5 @@
 {
   "name": "influencekit",
-  "version": "1.0.0",
-  "description": "Connect Claude to your InfluenceKit account to manage campaigns, track performance, troubleshoot deliverables, and prepare reports."
+  "version": "1.1.0",
+  "description": "Role-aware InfluenceKit routines: build and QA reports, recap campaigns, troubleshoot deliverables, and discover creators on top of the InfluenceKit MCP."
 }

@@ -1,24 +1,24 @@
 {
   "name": "influencekit",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "owner": {
     "name": "InfluenceKit",
     "email": "support@influencekit.com"
   },
   "metadata": {
-    "description": "Connect Claude to your InfluenceKit account to manage campaigns, track performance, and troubleshoot deliverables.",
+    "description": "Connect Claude to your InfluenceKit account to build and QA reports, recap campaigns, troubleshoot deliverables, and discover creators.",
     "homepage": "https://influencekit.com"
   },
   "plugins": [
     {
       "name": "influencekit",
       "source": "./plugins/influencekit",
-      "description": "Connect Claude to your InfluenceKit account to manage campaigns, track performance, troubleshoot deliverables, and prepare reports.",
+      "description": "Role-aware InfluenceKit routines: build and QA reports, recap campaigns, troubleshoot deliverables, and discover creators on top of the InfluenceKit MCP.",
       "author": {
         "name": "InfluenceKit",
         "email": "support@influencekit.com"
       },
-      "keywords": ["influencer-marketing", "campaigns", "reporting", "mcp"]
+      "keywords": ["influencer-marketing", "campaigns", "reporting", "creator-discovery", "mcp"]
     }
   ]
 }

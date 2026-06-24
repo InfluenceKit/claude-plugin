@@ -1,137 +1,153 @@
 ---
 name: influencekit
 description: >-
-  Use when orienting on InfluenceKit — what the platform and its MCP tools can
-  do, the core concepts (tenant, campaign, deliverable, report, connection), and
-  which routine fits a request. Read this when an InfluenceKit task is broad or
-  ambiguous, or to pick among the campaign-recap, report-preflight,
-  deliverable-repair, and connection-audit routines.
+  Use when an InfluenceKit request is broad, ambiguous, or you need to orient on
+  what the MCP can do — the role model (brand vs influencer vs all), the real
+  tool/prompt/resource surface, and which routine fits. Triggers on "what can
+  InfluenceKit do", "connect to my InfluenceKit account", or any InfluenceKit
+  task that doesn't obviously map to one routine.
 when_to_use: >-
-  General InfluenceKit orientation and routing to the right routine. For a
-  specific job, the dedicated routine (campaign-recap, report-preflight,
-  deliverable-repair, connection-audit) will usually trigger on its own — this
-  skill is the map, the concept reference, and the canonical 10-tool reference.
+  InfluenceKit orientation and routing. For a specific job the dedicated routine
+  (report-builder, report-preflight, deliverable-repair, connection-audit,
+  campaign-recap, creator-discovery, mcp-setup) usually triggers on its own —
+  this skill is the map: the role model, the real tool reference, and the
+  pointers to the MCP's own prompts and knowledge resources.
 ---
 
 # InfluenceKit
 
-You have access to the InfluenceKit MCP server — 10 read/ops tools for managing
-influencer campaigns, tracking content performance, troubleshooting deliverables,
-and preparing reports. This skill is the **orientation map**: what InfluenceKit
-is, the tools you have, and which **routine** to reach for. It is not a dispatch
-mechanism — each routine auto-loads on its own trigger.
+You are connected to the **InfluenceKit MCP server** (`https://api.influencekit.com/mcp`)
+— a **role-aware** toolset for influencer-marketing work: campaigns, content
+performance, deliverable troubleshooting, and shareable reports. This skill is
+the **orientation map** — the role model, which routine to reach for, and the
+real tool surface. It is not a dispatcher; each routine auto-loads on its own
+trigger.
 
-> **Audience note.** `list_tenants` searches across accounts and the MCP requires
-> an admin account, so these routines assume an **agency / account-manager /
-> InfluenceKit-internal operator** working across tenants — not per-creator
-> self-service.
+## The MCP tells you who you are — don't re-derive it
 
-## About InfluenceKit
+The connection is **session-scoped to one tenant**, resolved from the logged-in
+user. There is **no `list_tenants` and no cross-account browsing** — a token sees
+exactly one account. (Only an InfluenceKit super-admin connection may target
+another tenant, by passing `tenant_id`/`tenant_subdomain`; ordinary users never
+do.) So: **don't ask for or invent a tenant id** — just call the tools.
 
-InfluenceKit is an influencer marketing platform used by brands, agencies, and
-influencers to:
+**Read the MCP's own context first, instead of guessing or re-explaining it:**
 
-- **Manage campaigns** — organize influencer partnerships with deliverables,
-  deadlines, and performance goals.
-- **Track content performance** — automatically pull stats (reach, impressions,
-  engagement, clicks) from Instagram, TikTok, YouTube, Facebook, blogs, and more.
-- **Generate reports** — build professional, shareable reports that showcase
-  campaign results to clients and stakeholders.
+- **`session_context` resource** — account name, type, plan/quota, active
+  campaigns, connected platforms, and current error counts. Read it at the start
+  of any non-trivial task; it usually saves several tool calls.
+- **Knowledge resources** — `data-model`, `campaign-lifecycle`, `report-metrics`,
+  `industry-benchmarks`, `report-sharing`, `billing-usage`. These are the
+  **authoritative** domain reference. Don't paraphrase the data model from
+  memory; read the resource.
+- **Craft resources** — `metric-interpretation`, `error-handling`,
+  `report-building`, `campaign-setup`. How to interpret and present, not just
+  what the fields are.
+- **Server prompts** — `campaign_report`, `diagnose_issues`, `account_health`,
+  `discover_creators`. These are first-class workflows the server ships; the
+  routines here **complement** them (a recap routine references `campaign_report`
+  rather than re-implementing it).
 
-### Key concepts
+## Roles: brand vs influencer
 
-- **Tenant** — an InfluenceKit account (a brand, agency, or creator). Each tenant
-  has users, social connections, and campaigns.
-- **Campaign** — a marketing initiative containing one or more deliverables.
-  Campaigns have statuses like active, completed, or draft.
-- **Deliverable** — a specific piece of content (Instagram post, TikTok video,
-  YouTube video, blog post, Instagram Story, etc.) that's part of a campaign.
-  Deliverables track performance stats pulled from the social platform.
-- **Report** — a curated collection of deliverables assembled for sharing with
-  clients. Reports can include deliverables from one or multiple campaigns.
-- **Social connection** — an OAuth link between InfluenceKit and a social
-  platform. Connections need healthy tokens to pull stats.
+InfluenceKit is two-sided, and most tools are gated by account type. Know which
+side you're on (it's in `session_context.account_type` / `get_tenant`).
+
+- **Brand / agency** accounts own **campaigns** (`PartnerCampaign`), define
+  **assignments** (work items), **invite** influencers, discover creators, and
+  track AI Search (LLM brand visibility).
+- **Influencer / creator** accounts own **events** (their content calendar),
+  attach **deliverables**, and build **event-backed reports** they share with
+  clients.
+- **Both** can read campaigns/reports/deliverables, diagnose and repair
+  deliverables, check connections, resolve URLs, and navigate.
+
+A tool called against the wrong role returns a plain `error` (e.g. "only
+available for brand accounts") — the routines route by role so you don't hit
+that.
 
 ## Ethics floor (every routine inlines this)
 
 > *The creator's inbox and the client's trust are the commons.* Never fabricate
 > or extrapolate a stat — every number traces to a tool call. Never present
-> stale/errored stats as current without flagging. Never auto-send a report to a
-> client. Flag missing data before sharing, don't hide it. If a fix needs the
-> user to act in InfluenceKit, say so plainly.
+> stale/errored stats as current without flagging. Never auto-send or auto-share
+> a report — preparing or creating a report is not sending it; the human sends.
+> Flag missing data before sharing, don't hide it. If a fix needs the user to act
+> in InfluenceKit (reconnect, fix a URL, log in), say so plainly.
 
 Canonical copy: [`../ETHICS.md`](../ETHICS.md).
 
 ## The routines (index)
 
-Four single-purpose routines. Each has a distinct trigger, inlines the ethics
-floor, names the exact tools it uses, and declares any cap.
+Seven single-purpose routines. Each has a distinct trigger, declares its **role**,
+inlines the ethics floor, names the exact tools it uses, and declares any cap.
 
-| Routine | Reach for it when | Tools |
-|---------|-------------------|-------|
-| **campaign-recap** | "How is campaign X doing / which content won?" | `list_campaigns`, `get_campaign`, `get_deliverable` |
-| **report-preflight** | "Is this report client-ready before I send it?" | `get_report`, `diagnose_deliverable`, `check_connection` |
-| **deliverable-repair** | "This one post has no stats / fix this deliverable." | `diagnose_deliverable`, `check_connection`, `clear_deliverable_error`, `refresh_deliverable`, `get_deliverable` |
-| **connection-audit** | "Are all our social accounts healthy?" (account-wide) | `get_tenant`, `check_connection` |
+| Routine | Role | Reach for it when | Key tools |
+|---------|------|-------------------|-----------|
+| **report-builder** | influencer | "Build/assemble a shareable report from these URLs." | `create_report`, `add_deliverable`, `update_deliverable` |
+| **report-preflight** | any | "Is this report client-ready before I send it?" | `query_report_data`, `get_report`, `diagnose_deliverable`, `check_connection` |
+| **deliverable-repair** | any | "This one post has no stats / fix this deliverable." | `diagnose_deliverable`, `check_connection`, `clear_deliverable_error`, `refresh_deliverable`, `update_deliverable`, `get_deliverable` |
+| **connection-audit** | any | "Are all our social accounts healthy?" (account-wide) | `get_tenant`, `check_connection` |
+| **campaign-recap** | brand & influencer (split) | "How is campaign X doing / which content won?" | `query_campaign_data`, `list_campaigns`, `get_campaign`, `my_deliverables`, `query_report_data` |
+| **creator-discovery** | brand | "Find creators in <niche>; are we showing up in AI answers?" | `influencer_discovery`, `ai_search_status`, `ai_search_results`, `ai_search_queries`, `ai_search_run_check` |
+| **mcp-setup** | any (onboarding) | "I can't connect / I'm getting 401 / the connector won't add." | (setup; smoke-tests with `get_tenant`, `check_connection`) |
 
-Distinct surfaces: recap = performance, preflight = report QA, repair = one
-broken item, audit = account-wide connection health. If a request spans two,
-pick by the user's primary intent; don't run all four.
+Distinct surfaces: builder = create, preflight = report QA, repair = one broken
+item, audit = account-wide connections, recap = performance, discovery = find
+creators + AI visibility, setup = getting connected. If a request spans two, pick
+by the user's primary intent; don't run several.
 
-## The 10 tools (reference)
+## Real tool reference (33 tools, role-aware)
 
-### Looking up accounts
+Names are verbatim. `read` = read-only; `write` = creates/changes/ops. Tenant is
+implicit (session-scoped); only super-admins pass `tenant_id`/`tenant_subdomain`.
 
-- **list_tenants** — Search for and list InfluenceKit accounts. Use this to find
-  a specific account by name or browse accounts. Returns account names, IDs, and
-  basic info.
-- **get_tenant** — Get full details for a specific account, including its users,
-  social connections, subscription plan, and account settings. Use this when you
-  need a complete picture of an account's setup.
+### Read — any role
+- **get_tenant** — account details: users, connections, plan, counts.
+- **list_campaigns** — a brand's campaigns (active/archived).
+- **get_campaign** — one campaign with its assignments + per-influencer invitations.
+- **get_deliverable** — one deliverable: stats, error, connection, (YouTube) channel.
+- **list_reports** — reports for the account (name search, paginate; any age).
+- **get_report** — one report with deliverables and the public **share_url**.
+- **query_report_data** — composite: reports + deliverables + aggregate metrics in one call.
+- **query_campaign_data** — composite: campaigns + assignments + invitations + metrics in one call.
+- **check_connection** — one OAuth token's health (`token_id`).
+- **diagnose_deliverable** — why a deliverable is failing + a `next_step` hint.
 
-### Working with campaigns
+### Brand-only
+- **account_status** — activation checklist / setup progress.
+- **influencer_discovery** — search creators by name/handle/niche/platform/location/followers/engagement.
+- **campaign_create** — create a campaign (`name`).
+- **brand_profile_get** / **brand_profile_update** — read/patch the brand profile (read before update).
+- **ai_search_status** — latest AI Search (LLM brand-visibility) check: mention rate + per-provider breakdown.
+- **ai_search_results** — per-query AI Search results for a check.
+- **ai_search_queries** — list active AI Search queries, or add one.
+- **ai_search_run_check** — enqueue a new AI Search check.
 
-- **list_campaigns** — List campaigns, optionally filtered by status (active,
-  completed, draft, etc.). Use this to see what campaigns are running, find a
-  specific campaign, or get an overview of campaign activity.
-- **get_campaign** — Get detailed information about a specific campaign,
-  including its deliverables summary, date range, and performance overview.
+### Influencer-only
+- **my_deliverables** — your deliverables with status/errors (filter by event/error).
+- **create_event** — create an event (content campaign) on your calendar.
+- **add_deliverable** — add deliverable URLs (+ optional note) to an event.
+- **delete_event** — delete an owned event (also deletes its deliverables + report). Destructive.
+- **create_report** — create/fetch the **event-backed** report (name → event + share_url in one step).
 
-### Checking deliverable performance
+### Write / ops — any role
+- **assignments** — manage `Assignment` work items (`list`/`get`/`create`; create is brand-only).
+- **invitations** — manage per-influencer `TenantAssignment`s (`list`/`get`/`invite`/`signup_link`; invite is brand-only).
+- **update_deliverable** — override title/description/provider, or set manual reach/impressions.
+- **create_builder_report** — create a free-form **filter-based** report (not tied to one event).
+- **delete_report** — delete an owned report (keeps the event/deliverables). Destructive.
+- **refresh_deliverable** — re-fetch stats from the platform API.
+- **clear_deliverable_error** — clear a deliverable's error state for retry.
+- **navigation** — map a user goal to an in-app URL path.
+- **resolve_url** — turn a pasted InfluenceKit URL into a resource type + numeric id.
 
-- **get_deliverable** — Get full details for a specific deliverable, including
-  its current stats (reach, impressions, engagement, clicks), content type,
-  platform, URL, and status.
+## Notes
 
-### Reports
-
-- **get_report** — Get a report's details along with its included deliverables
-  and their stats. Use this to review what's in a report before it's shared, or
-  to summarize report results.
-
-### Troubleshooting
-
-- **check_connection** — Check whether a social connection's OAuth token is
-  healthy and able to pull data. Use this when stats aren't updating — a broken
-  connection is the most common cause.
-- **diagnose_deliverable** — Run a diagnostic check on a deliverable that's
-  showing errors or missing stats. Returns a plain-language explanation of what's
-  wrong and specific steps to fix it. This is your go-to tool when something
-  isn't working with a deliverable.
-
-### Fixing issues
-
-- **refresh_deliverable** — Tell InfluenceKit to re-fetch stats from the social
-  platform for a specific deliverable. Use this after fixing an underlying issue
-  (like reconnecting an expired token) to pull fresh data.
-- **clear_deliverable_error** — Clear the error state on a deliverable so it can
-  be retried. Use this when a deliverable is stuck in an error state and you want
-  to give it a fresh start before refreshing.
-
-## What these tools do NOT do
-
-This MCP is **read + ops only**. There is no creator discovery, no media-kit
-read/write, and **no report or content creation** — you can read and prepare a
-report, never create or send one. Requests for those surfaces are on the roadmap,
-not in the toolset: see [`docs/mcp-routines-roadmap.md`](../../../../docs/mcp-routines-roadmap.md).
-Don't promise a capability the 10 tools don't have.
+- **`create_report` is influencer-only and event-backed** (a report is the report
+  *of* an event). Brands report on campaigns/assignments — use `query_campaign_data`
+  and the `assignments`/`invitations` tools, not `create_report`.
+- **No `list_tenants`.** Any older orientation/assistant content that lists a 10-tool,
+  admin-scoped, cross-tenant toolset (with `list_tenants` and "no report creation")
+  is **obsolete** — it predates this role-aware, write-capable MCP.
+- Pasting a browser URL? Use **resolve_url** to get the id, then call the typed tool.

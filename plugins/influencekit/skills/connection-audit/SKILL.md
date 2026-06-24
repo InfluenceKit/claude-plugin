@@ -6,19 +6,26 @@ description: >-
   Triggers on "are all our social accounts healthy", "which connections need
   reconnecting", "why are some accounts not pulling data".
 when_to_use: >-
-  Account-wide connection health sweep across all of a tenant's social accounts.
-  NOT for one broken deliverable (use deliverable-repair), NOT for QA on a
-  specific report (use report-preflight), NOT for a campaign performance recap
-  (use campaign-recap).
+  Account-wide social-connection health sweep across all of a tenant's OAuth
+  tokens. NOT for one broken deliverable (use deliverable-repair), NOT for QA on
+  a specific report (use report-preflight), NOT for a campaign performance recap
+  (use campaign-recap), NOT for fixing the Claude↔InfluenceKit connection itself
+  (use mcp-setup).
 ---
 
 # Connection Audit
 
+**Role: any.** `get_tenant` and `check_connection` work on brand and influencer
+accounts. The connection is session-scoped, so you're auditing **this** account's
+own social tokens — no tenant id needed.
+
 ## Overview
 
-Sweep every social connection on an account and report which OAuth tokens are
+Sweep every social connection on the account and report which OAuth tokens are
 healthy and which need the user to reconnect. This is the account-wide health
 check — the upstream cause of most "stats aren't updating" problems lives here.
+(Auditing the InfluenceKit *social* tokens — Instagram/TikTok/etc. — not the MCP
+connection itself; for that, see `mcp-setup`.)
 
 ## When to use
 
@@ -26,8 +33,8 @@ check — the upstream cause of most "stats aren't updating" problems lives here
 - "Which connections need to be refreshed?"
 - "Why are some of our accounts not pulling data?"
 
-**When NOT to use:** one broken deliverable (use `deliverable-repair`), report
-QA (use `report-preflight`), or a performance recap (use `campaign-recap`).
+**When NOT to use:** one broken deliverable (use `deliverable-repair`), report QA
+(use `report-preflight`), or a performance recap (use `campaign-recap`).
 
 ## Ethics floor (always applies)
 
@@ -43,20 +50,24 @@ QA (use `report-preflight`), or a performance recap (use `campaign-recap`).
 
 ## Tools this routine uses
 
-- **get_tenant** — Get full details for a specific account, including its users,
-  social connections, subscription plan, and account settings. Use this to
-  enumerate every connection on the account.
-- **check_connection** — Check whether a social connection's OAuth token is
-  healthy and able to pull data. Run this on each connection the account has.
+- **get_tenant** — Account details including the list of `connections` (social
+  OAuth tokens) with their ids, providers, and validation/expiry status. Use this
+  to enumerate every connection. It also emits a `next_step` hint pointing at the
+  first invalid connection.
+- **check_connection** — Per-token health by `token_id`: provider, validated,
+  expired/expires_at, and a sample of any failing deliverables. Run this on each
+  connection to confirm.
 
 Read-only. This routine never reconnects, refreshes, or sends anything — a
 reconnect is always the user's action in InfluenceKit.
 
 ## How to run it
 
-1. **Enumerate connections.** Use `get_tenant` to list every social connection on
-   the account.
-2. **Check each one.** Run `check_connection` per connection (see Cap below).
+1. **Enumerate connections.** Call `get_tenant` and read its `connections` list —
+   each has a `token_id` and a coarse validated/expired flag.
+2. **Confirm each one.** Run `check_connection(token_id:)` per connection (see Cap).
+   `get_tenant`'s flag is the headline; `check_connection` is the detail (expiry,
+   failing-deliverable count).
 3. **Classify** each as **Healthy** or **Needs reconnect** (with the reason from
    `check_connection`).
 4. **Produce a health table** plus a clear reconnect list of exactly which
@@ -74,20 +85,20 @@ partial sweep must never read as "all healthy."
 ## Output format (fixed)
 
 ```
-# Connection audit: <Account name>
+# Connection audit: Account name
 
 ## Health
 | Connection | Platform | Status | Note |
 |------------|----------|--------|------|
-| <name>     | Instagram| Healthy| —    |
-| <name>     | TikTok   | Needs reconnect | token expired |
+| name       | Instagram| Healthy| —    |
+| name       | TikTok   | Needs reconnect | token expired |
 
 ## Summary
-- Connections checked: <n> of <n total>
-- Healthy: <n>   Needs reconnect: <n>
+- Connections checked: n of n total
+- Healthy: n   Needs reconnect: n
 
 ## Reconnect list (user action in InfluenceKit)
-1. <account> — <reason>
+1. account — reason
 2. ...
 ```
 
@@ -96,10 +107,10 @@ partial sweep must never read as "all healthy."
 > **Illustrative only — placeholders.** Real statuses come from `get_tenant` /
 > `check_connection`.
 
-User: *"Are all of Acme Agency's social accounts healthy?"*
+User: *"Are all of our social accounts healthy?"*
 
-1. `get_tenant(id: 44)` → 4 connections: 2 Instagram, 1 TikTok, 1 YouTube.
-2. `check_connection` on each.
+1. `get_tenant()` returns 4 connections: 2 Instagram, 1 TikTok, 1 YouTube.
+2. `check_connection(token_id:)` on each.
 
 ```
 # Connection audit: Acme Agency
