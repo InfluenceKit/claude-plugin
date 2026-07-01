@@ -91,6 +91,12 @@ No writes. This routine never creates, refreshes, or sends anything.
    favors video" is **not** — that's speculation, not data.
 7. **Flag any deliverable with missing or errored stats** instead of dropping it.
 
+> **Benchmarks come from the server, not from you.** If a recap needs a "good/bad"
+> read (e.g. "is 4.1% engagement strong for this platform?"), read the
+> `report-metrics` and `metric-interpretation` MCP resources for the norms —
+> don't assert benchmarks from memory. The skill owns the workflow; the server
+> owns the domain facts.
+
 ## Cap (no silent truncation)
 
 If you fan out per-deliverable reads, **cap at the first 25 deliverables** and

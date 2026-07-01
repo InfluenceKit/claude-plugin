@@ -81,6 +81,10 @@ To actually *invite* a creator you find, that's the `invitations` tool (under
 4. **Stop at the shortlist.** If the user wants to invite someone, hand off to the
    `invitations` tool — don't contact anyone here.
 
+> For "is this engagement rate good for the niche?" context, read the
+> `industry-benchmarks` resource rather than asserting a threshold — the server
+> owns the norms.
+
 **For AI visibility:**
 1. **Read the latest check** with `ai_search_status`. If it returns `no_checks`,
    offer to run one (`ai_search_run_check`) — but it's async, so don't block.
