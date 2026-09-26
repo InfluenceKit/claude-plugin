@@ -1,5 +1,15 @@
 {
   "name": "influencekit",
-  "version": "1.1.0",
-  "description": "Role-aware InfluenceKit routines: build and QA reports, recap campaigns, troubleshoot deliverables, and discover creators on top of the InfluenceKit MCP."
+  "displayName": "InfluenceKit",
+  "version": "1.2.0",
+  "description": "Role-aware InfluenceKit routines: build and QA reports, recap campaigns, troubleshoot deliverables, and discover creators on top of the InfluenceKit MCP.",
+  "author": {
+    "name": "InfluenceKit",
+    "email": "support@influencekit.com",
+    "url": "https://www.influencekit.com"
+  },
+  "homepage": "https://help.influencekit.com/en/articles/14011645-using-influencekit-with-ai-assistants-mcp",
+  "repository": "https://github.com/InfluenceKit/claude-plugin",
+  "license": "MIT",
+  "keywords": ["influencer-marketing", "campaigns", "reporting", "creator-discovery", "mcp"]
 }
