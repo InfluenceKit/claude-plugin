@@ -1,9 +1,9 @@
 # InfluenceKit MCP allowlist — snapshot of app/mcp/influencekit_mcp_server.rb
 # (TOOLS + PROMPTS). Regenerate from a Rails checkout:
 #   MCP_DIR=/path/to/influencekit/app/mcp ruby scripts/check_tool_allowlist.rb
-# 33 tools + 4 prompts. Keep in sync with the registry.
+# 37 tools + 4 prompts. Keep in sync with the registry.
 
-# --- TOOLS (33) ---
+# --- TOOLS (37) ---
 get_tenant
 list_campaigns
 get_campaign
@@ -19,7 +19,9 @@ refresh_deliverable
 clear_deliverable_error
 campaign_create
 assignments
+create_assignment
 invitations
+invite_influencer
 brand_profile_get
 brand_profile_update
 account_status
@@ -36,6 +38,7 @@ query_campaign_data
 ai_search_status
 ai_search_results
 ai_search_queries
+ai_search_add_query
 ai_search_run_check
 
 # --- PROMPTS (4) ---

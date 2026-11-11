@@ -28,9 +28,9 @@ Two brand jobs, one routine:
 2. **AI visibility ("AI Search")** — track how often the brand is mentioned in AI
    assistant answers, by provider, and what competitors surface
    (`ai_search_status` / `ai_search_results` / `ai_search_queries` /
-   `ai_search_run_check`).
+   `ai_search_add_query` / `ai_search_run_check`).
 
-To actually *invite* a creator you find, that's the `invitations` tool (under
+To actually *invite* a creator you find, that's the `invite_influencer` tool (under
 `campaign-recap`/campaign setup) — discovery stops at the shortlist.
 
 ## Ethics floor (always applies)
@@ -63,9 +63,9 @@ To actually *invite* a creator you find, that's the `invitations` tool (under
   active query count.
 - **ai_search_results** — Per-query results for a check (defaults to latest):
   which providers mentioned the brand, evidence, competitors, sentiment.
-- **ai_search_queries** — List active queries, or **add** one (`query_text` +
-  `query_type`: `category_recommendation`, `product_comparison`, or
-  `brand_reputation`).
+- **ai_search_queries** — List active queries (read-only).
+- **ai_search_add_query** — Add a tracked query (`query_text` + `query_type`:
+  `category_recommendation`, `product_comparison`, or `brand_reputation`).
 - **ai_search_run_check** — Enqueue a new check (returns the new check id, or the
   already-running one). Checks run async — read `ai_search_status` later for results.
 
@@ -79,7 +79,7 @@ To actually *invite* a creator you find, that's the `invitations` tool (under
 3. **Shortlist** the top candidates with their real numbers. Note any candidate
    missing engagement data instead of inventing it.
 4. **Stop at the shortlist.** If the user wants to invite someone, hand off to the
-   `invitations` tool — don't contact anyone here.
+   `invite_influencer` tool — don't contact anyone here.
 
 > For "is this engagement rate good for the niche?" context, read the
 > `industry-benchmarks` resource rather than asserting a threshold — the server
@@ -90,7 +90,8 @@ To actually *invite* a creator you find, that's the `invitations` tool (under
    offer to run one (`ai_search_run_check`) — but it's async, so don't block.
 2. **Drill in** with `ai_search_results` for per-query, per-provider detail and
    competitors.
-3. **Tune queries** with `ai_search_queries` (list, or add a tracked query).
+3. **Tune queries**: list them with `ai_search_queries`, add one with
+   `ai_search_add_query`.
 4. **Report the mention rate as a band, not a point** (use the CI), name the
    check timestamp, and keep "provider unavailable this run" separate from "brand
    not mentioned."
@@ -119,7 +120,7 @@ don't blend providers that were unavailable into the rate.
 - <creator> — no engagement data returned (not estimated)
 
 ## Next step
-Review the shortlist; to invite, use the invitations tool (separate, deliberate step).
+Review the shortlist; to invite, use the invite_influencer tool (separate, deliberate step).
 ```
 
 For AI visibility:
@@ -158,5 +159,5 @@ engagement."*
 - @prairiebites — no engagement rate returned (not estimated)
 
 ## Next step
-Review the shortlist; to invite, use the invitations tool (separate, deliberate step).
+Review the shortlist; to invite, use the invite_influencer tool (separate, deliberate step).
 ```
