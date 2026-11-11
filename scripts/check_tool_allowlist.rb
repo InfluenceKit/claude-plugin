@@ -35,13 +35,13 @@ IGNORE = %w[
   session_context
   account_type brand_account influencer_account
   tenant_id tenant_subdomain
-  event_id deliverable_id report_id campaign_id token_id
+  event_id deliverable_id report_id campaign_id token_id assignment_id
   reportable_id reportable_type
   query_object query_text query_type
   has_error start_date end_date
   min_followers max_followers min_engagement_rate
   check_id user_limit connection_limit
-  access_token share_url signup_link next_step
+  access_token share_url signup_link creator_profiles next_step
   impressions_unique provider_published_at
   no_checks instagram_stories tik_tok
   category_recommendation product_comparison brand_reputation
