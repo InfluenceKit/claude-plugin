@@ -25,7 +25,7 @@ These were on the old roadmap as gaps. They exist today; the routines use them.
 | Add content to a report | `add_deliverable` | URLs (+ note) onto an event; partner-can-add covers cross-tenant. |
 | Manual / off-platform stats, label, type override | `update_deliverable` | Manual `reach`→`impressions_unique`, `impressions`; `title`; `provider` (e.g. `beehiiv`). This is the **newsletter** path today. |
 | Creator discovery | `influencer_discovery` | Brand-only; niche/platform/location/followers/engagement filters. |
-| AI brand visibility | `ai_search_status` / `ai_search_results` / `ai_search_queries` / `ai_search_run_check` | "AI Search" — LLM mention tracking, brand-only. |
+| AI brand visibility | `ai_search_status` / `ai_search_results` / `ai_search_queries` / `ai_search_add_query` / `ai_search_run_check` | "AI Search" — LLM mention tracking, brand-only. |
 | List/search reports | `list_reports`, `query_report_data` | Any age, name search, pagination; composite read. |
 | Delete a report / event | `delete_report`, `delete_event` | Destructive; owner-scoped. |
 | Composite reads | `query_report_data`, `query_campaign_data` | Reports/campaigns + deliverables + metrics in one call. |

@@ -118,10 +118,13 @@ implicit (session-scoped); only super-admins pass `tenant_id`/`tenant_subdomain`
 - **account_status** — activation checklist / setup progress.
 - **influencer_discovery** — search creators by name/handle/niche/platform/location/followers/engagement.
 - **campaign_create** — create a campaign (`name`).
+- **create_assignment** — add an `Assignment` work item to a campaign (`campaign_id` + `title`).
+- **invite_influencer** — email a signup invite for an assignment (`assignment_id` + `email`). Sends an email outside InfluenceKit; confirm the address first.
 - **brand_profile_get** / **brand_profile_update** — read/patch the brand profile (read before update).
 - **ai_search_status** — latest AI Search (LLM brand-visibility) check: mention rate + per-provider breakdown.
 - **ai_search_results** — per-query AI Search results for a check.
-- **ai_search_queries** — list active AI Search queries, or add one.
+- **ai_search_queries** — list active AI Search queries (read-only).
+- **ai_search_add_query** — add a tracked AI Search query (`query_text` + `query_type`).
 - **ai_search_run_check** — enqueue a new AI Search check.
 
 ### Influencer-only
@@ -132,8 +135,8 @@ implicit (session-scoped); only super-admins pass `tenant_id`/`tenant_subdomain`
 - **create_report** — create/fetch the **event-backed** report (name → event + share_url in one step).
 
 ### Write / ops — any role
-- **assignments** — manage `Assignment` work items (`list`/`get`/`create`; create is brand-only).
-- **invitations** — manage per-influencer `TenantAssignment`s (`list`/`get`/`invite`/`signup_link`; invite is brand-only).
+- **assignments** — read `Assignment` work items (`list`/`get`). Read-only; create with `create_assignment`.
+- **invitations** — read per-influencer `TenantAssignment`s (`list`/`get`/`signup_link`/`creator_profiles`). Read-only; invite with `invite_influencer`.
 - **update_deliverable** — override title/description/provider, or set manual reach/impressions.
 - **create_builder_report** — create a free-form **filter-based** report (not tied to one event).
 - **delete_report** — delete an owned report (keeps the event/deliverables). Destructive.
@@ -147,6 +150,9 @@ implicit (session-scoped); only super-admins pass `tenant_id`/`tenant_subdomain`
 - **`create_report` is influencer-only and event-backed** (a report is the report
   *of* an event). Brands report on campaigns/assignments — use `query_campaign_data`
   and the `assignments`/`invitations` tools, not `create_report`.
+- **Every tool reads or writes, never both.** The read tools refuse the old write
+  arguments (`action: "create"`, `action: "invite"`, `query_text`) and name the
+  write tool to call instead.
 - **No `list_tenants`.** Any older orientation/assistant content that lists a 10-tool,
   admin-scoped, cross-tenant toolset (with `list_tenants` and "no report creation")
   is **obsolete** — it predates this role-aware, write-capable MCP.
